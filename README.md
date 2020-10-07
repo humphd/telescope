@@ -1,6 +1,6 @@
 ## What is Telescope?
 
-It's amazing!
+It's **so** amazing!
 
 [Seneca College](https://www.senecacollege.ca/home.html) is active in the open
 source community. For more than a decade, faculty and students have been
