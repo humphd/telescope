@@ -2,6 +2,8 @@
 
 It's amazing!
 
+You can have fun developing it and learn a lot about git.
+
 [Seneca College](https://www.senecacollege.ca/home.html) is active in the open
 source community. For more than a decade, faculty and students have been
 blogging about their open source research and development using a variety of
