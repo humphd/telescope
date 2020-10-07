@@ -1,6 +1,6 @@
 ## What is Telescope?
 
-It's amazing!
+It's **so** amazing!
 
 You can have fun developing it and learn a lot about git.
 
