@@ -5,6 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import SentimentDissatisfiedRoundedIcon from '@material-ui/icons/SentimentDissatisfiedRounded';
 import Timeline from './Timeline.jsx';
 import useSiteMetaData from '../../hooks/use-site-metadata';
+import useFaviconBadge from '../../hooks/use-favicon-badge';
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -30,6 +31,9 @@ const REFRESH_INTERVAL = 5 * 60 * 1000; /* refresh data every 5 minutes */
 
 const Posts = () => {
   const classes = useStyles();
+  // Call setBadge(true) to show the favicon badge when the page is not visible
+  const setBadge = useFaviconBadge(false); // pass true here to badge from the start
+
   const { telescopeUrl } = useSiteMetaData();
   const { data, size, setSize, error } = useSWRInfinite(
     (index) => `${telescopeUrl}/posts?page=${index + 1}`,
@@ -38,6 +42,7 @@ const Posts = () => {
       refreshInterval: REFRESH_INTERVAL,
     }
   );
+  // Set to true to show badge, false otherwise.  Badge only shows when not visible.
 
   // TODO: need proper error handling
   if (error) {
