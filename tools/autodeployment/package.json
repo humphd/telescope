@@ -4,6 +4,7 @@
   "description": "A tool for automatic deployment",
   "main": "server.js",
   "dependencies": {
+    "@octokit/webhooks": "^7.21.0",
     "date-fns": "^2.16.1",
     "dotenv": "^8.2.0",
     "github-webhook-handler": "^1.0.0",
@@ -18,5 +19,9 @@
   "license": "BSD-2-Clause",
   "bugs": {
     "url": "https://github.com/Seneca-CDOT/telescope/issues"
+  },
+  "devDependencies": {
+    "@octokit/webhooks-definitions": "github:octokit/webhooks",
+    "@types/merge-stream": "^1.1.2"
   }
 }

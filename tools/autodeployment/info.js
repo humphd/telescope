@@ -1,18 +1,24 @@
-const formatDistance = require('date-fns/formatDistance');
+const { formatDistance } = require('date-fns');
 
-// One of 'idle' or 'building'
+/** @type {BuildStatus} Status, one of 'idle' or 'building' */
 let currentStatus = 'idle';
-// When the last build completed
-let recentBuildDate = null;
-// Whether last build worked or failed
-let recentBuildResult = null;
-// Date when the last build began, null if not building.
-let currentBuildStartedAt = null;
+/** @type {BuildType} Type of build, one of 'production' or 'staging' */
+let currentBuildType;
+/** @type {Date} When the last build completed */
+let recentBuildDate;
+/** @type {'success' | 'failure'} Whether last build worked or failed */
+let recentBuildResult;
+/** @type {Date} Date when the last build began, null if not building */
+let currentBuildStartedAt;
 
 function handleStatus(req, res) {
   const info = {
     status: currentStatus,
   };
+
+  if (currentStatus === 'building') {
+    info.currentBuildType = currentBuildType;
+  }
 
   if (recentBuildDate) {
     info.recentBuildDate = recentBuildDate;
@@ -35,7 +41,8 @@ function handleStatus(req, res) {
 
 module.exports.buildStart = function (type) {
   currentBuildStartedAt = new Date();
-  currentStatus = `building ${type}`;
+  currentStatus = `building`;
+  currentBuildType = type;
 };
 
 module.exports.buildStop = function (code) {

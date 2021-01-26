@@ -1,6 +1,8 @@
 require('dotenv').config();
+
 const path = require('path');
 const https = require('https');
+const { IncomingMessage, ServerResponse } = require('http');
 const createHandler = require('github-webhook-handler');
 const shell = require('shelljs');
 const mergeStream = require('merge-stream');
@@ -8,7 +10,6 @@ const fs = require('fs');
 
 const { buildStart, buildStop, handleStatus } = require('./info');
 
-// Current build process output stream (if any)
 let out;
 const {
   SECRET,
@@ -27,6 +28,8 @@ const credentials = {
   cert: certificate,
 };
 
+/** @param {IncomingMessage} req */
+/** @parm {import} */
 function handleError(req, res) {
   res.statusCode = 404;
   res.end('Not Found');
@@ -39,6 +42,7 @@ function handleLog(req, res) {
     return;
   }
 
+  /** @param {string} message */
   function end(message) {
     if (message) {
       res.write(message);
@@ -91,8 +95,8 @@ if (!(DEPLOY_TYPE === 'staging' || DEPLOY_TYPE === 'production')) {
  * https://docs.github.com/en/actions/reference/events-that-trigger-workflows#release
  * The filter combines checking for staging or production build types and also for the right type of action for a release event in production builds
  * @param {string} name - Repository name (should be 'telescope')
- * @param {string} buildType - Build type: staging or production
- * @param {string} action - Action for a specific release event: created, published or released.
+ * @param {BuildType} buildType - Build type: staging or production
+ * @param {string} action - Action for a specific release event: created, published, released, etc.
  */
 function requestFilter(name, buildType, action) {
   return (
@@ -103,8 +107,8 @@ function requestFilter(name, buildType, action) {
 
 /**
  * Create a handler for the particular GitHub push event and build type
- * @param {string} buildType - one of `production` or `staging`
- * @param {string} gitHubEvent - the GitHub Push Event name
+ * @param {BuildType} buildType one of `production` or `staging`
+ * @param {import('@octokit/webhooks-definitions/schema').WebhookEventName} gitHubEvent the GitHub Push Event name
  */
 function handleEventType(buildType, gitHubEvent) {
   if (DEPLOY_TYPE !== buildType) {
