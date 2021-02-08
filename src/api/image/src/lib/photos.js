@@ -2,6 +2,8 @@ const { execFile } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const logger = require('./logger');
+
 // We put all downloaded photos in the photos/ dir
 const photosDir = path.join(__dirname, '../..', 'photos');
 
@@ -10,19 +12,19 @@ let photos = ['default.jpg'];
 
 // Download the Unsplash photos in the background, and update our list when done
 function download() {
-  console.log('Started downloading Unsplash photos...');
+  logger.info('Started downloading Unsplash photos...');
   const filename = path.join(__dirname, '../..', '/bin/unsplash-download.js');
   execFile(filename, (error, stdout, stderr) => {
     if (error) {
-      console.warn('Unable to download Unsplash photos', stderr);
+      logger.warn(stderr, 'Unable to download Unsplash photos');
     } else {
       fs.readdir(photosDir, (err, photoFilenames) => {
         if (err) {
-          console.warn('Unable to read downloaded photos', err);
+          logger.error(err, 'Unable to read downloaded photos');
           return;
         }
         photos = photoFilenames.filter((photoFilename) => photoFilename.endsWith('.jpg'));
-        console.log('Finished downloading Unsplash photos.');
+        logger.info('Finished downloading Unsplash photos.');
       });
     }
   });

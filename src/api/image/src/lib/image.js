@@ -31,12 +31,7 @@ function optimize({ imgStream, width, height, imageType, res }) {
       break;
   }
 
-  const transformErrorHandler = (err) => {
-    console.error(err);
-    res.status(500).end();
-  };
-
-  return imgStream.pipe(transformer()).on('error', transformErrorHandler);
+  return imgStream.pipe(transformer());
 }
 
 module.exports.optimize = optimize;

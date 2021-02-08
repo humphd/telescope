@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "description": "A service for optimizing images",
   "scripts": {
+    "dev": "node server.js | pino-pretty -c -l -t",
     "start": "node server.js",
     "clean": "del \"./photos/*.jpg\" \"!./photos/default.jpg\""
   },
@@ -14,19 +15,25 @@
   },
   "homepage": "https://github.com/Seneca-CDOT/telescope#readme",
   "dependencies": {
+    "@elastic/ecs-pino-format": "^0.2.0",
     "@godaddy/terminus": "^4.6.0",
     "celebrate": "^13.0.4",
     "cors": "2.8.5",
     "express": "4.17.1",
+    "express-pino-logger": "^6.0.0",
     "got": "^11.8.1",
     "helmet": "4.1.1",
     "http-errors": "^1.8.0",
+    "pino": "^6.11.0",
+    "pino-elasticsearch": "^5.4.0",
+    "pino-express": "^1.1.1",
     "sharp": "^0.27.1"
   },
   "engines": {
     "node": ">=12.0.0"
   },
   "devDependencies": {
-    "del-cli": "^3.0.1"
+    "del-cli": "^3.0.1",
+    "pino-pretty": "^4.5.0"
   }
 }

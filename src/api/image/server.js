@@ -2,6 +2,7 @@ const { createServer } = require('http');
 const { createTerminus } = require('@godaddy/terminus');
 const app = require('./src/app.js');
 const { download } = require('./src/lib/photos');
+const logger = require('./src/lib/logger');
 
 const server = createServer(app);
 
@@ -11,10 +12,11 @@ createTerminus(server, {
     '/healthcheck': () => Promise.resolve(),
   },
   signal: 'SIGINT',
-  logger: console.log,
+  logger,
 });
 
-server.listen(process.env.PORT || 4444, () => {
+const port = process.env.IMAGE_PORT || 4444;
+server.listen(port, () => {
   // Once the server is running, start downloading any missing photos
   download();
 });

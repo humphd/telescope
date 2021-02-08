@@ -2,16 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const createError = require('http-errors');
+const expressPino = require('express-pino-logger');
 
+const logger = require('./lib/logger');
 const routes = require('./routes');
 
 const app = express();
+app.use(expressPino({ logger }));
 app.use(helmet());
 app.use(cors());
-
-// TODO: figure out how to do logging for each service...
-// app.set('logger', logger);
-// app.use(logger);
 
 // Include our router with all endpoints
 app.use('/', routes);
@@ -24,7 +23,7 @@ app.use(function (req, res, next) {
 // Default error handler
 // eslint-disable-next-line no-unused-vars
 app.use(function (err, req, res, next) {
-  console.error(err.stack);
+  req.log.error(err.stack);
 
   res.status(err.status || 500);
 

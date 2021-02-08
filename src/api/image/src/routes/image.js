@@ -51,7 +51,7 @@ const optimizeImage = (stream, req, res) => {
   // Optimize this image and stream back to the client
   optimize(options)
     .on('error', (err) => {
-      console.error(err);
+      req.log.error(err);
       res.status(500).end();
     })
     .pipe(res);

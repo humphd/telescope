@@ -8,6 +8,7 @@ const { promisify } = require('util');
 
 const unsplashPhotoUrls = require('../unsplash-photos.json');
 const { photosDir } = require('../src/lib/photos');
+const logger = require('../src/lib/logger');
 
 const pipeline = promisify(stream.pipeline);
 
@@ -18,7 +19,7 @@ const pipeline = promisify(stream.pipeline);
  */
 function downloadPhoto(url, filename) {
   return pipeline(got.stream(url), fs.createWriteStream(filename)).then(() =>
-    console.info(`Wrote ${url} to ${filename}`)
+    logger.debug(`Wrote ${url} to ${filename}`)
   );
 }
 
@@ -62,10 +63,10 @@ function downloadUnsplashPhotos() {
 
 downloadUnsplashPhotos()
   .then(() => {
-    console.log(`Finished downloading Unsplash photos to ${photosDir}`);
+    logger.info(`Finished downloading Unsplash photos to ${photosDir}`);
     return process.exit();
   })
   .catch((err) => {
-    console.warn(`Couldn't download Unsplash photos`, err.message);
+    logger.warn(`Couldn't download Unsplash photos`, err.message);
     return process.exit(1);
   });

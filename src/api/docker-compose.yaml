@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  reverse-proxy:
+  api-gateway:
     image: traefik:v2.4
     command:
       - '--log.level=DEBUG'
@@ -19,42 +19,42 @@ services:
 
   redis:
     image: 'redis:alpine'
-    ports:
-      - ${REDIS_PORT}:${REDIS_PORT}
     command: ['redis-server', '--appendonly', 'yes']
     volumes:
       - ./redis-data:/data
 
   # ELK Stack
   elasticsearch:
-    env_file: .env
     image: docker.elastic.co/elasticsearch/elasticsearch:7.9.3
     environment:
       - bootstrap.memory_lock=true
       - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
       - discovery.type=single-node
-    ports:
-      - '${ELASTIC_PORT}:${ELASTIC_PORT}'
+    # See the following:
+    # - https://www.elastic.co/guide/en/elastic-stack-get-started/current/get-started-docker.html,
+    # - https://github.com/deviantony/docker-elk/issues/243
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
       - type: volume
         source: elasticsearch
         target: /usr/share/elasticsearch/data
+    ports:
+      - '9200'
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.elastic.rule=Host(`elastic.docker.localhost`)'
       - 'traefik.http.routers.elastic.middlewares=es-stripprefix'
       - 'traefik.http.middlewares.es-stripprefix.stripprefix.prefixes=/es'
-      - 'traefik.http.services.elastic.loadbalancer.server.port=${ELASTIC_PORT}'
+      - 'traefik.http.services.elastic.loadbalancer.server.port=9200'
 
   kibana:
-    env_file: .env
     image: docker.elastic.co/kibana/kibana:7.9.3
-    ports:
-      - '${KIBANA_PORT}'
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:${ELASTIC_PORT}
-      - KIBANA_HOST=${KIBANA_HOST}
-      - SERVER_PORT=${KIBANA_PORT}
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - elasticsearch
     restart: always
@@ -62,9 +62,37 @@ services:
       - type: volume
         source: elasticsearch
         target: /usr/share/elasticsearch/data
+    ports:
+      - '5601'
     labels:
       - 'traefik.http.routers.kibana.rule=Host(`kibana.docker.localhost`)'
       - 'traefik.backend=kibana'
+
+  # System Metrics Logging
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:7.9.3
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+  # Logging
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.10.2
+    # Need root for access to Docker daemon at unix:///var/run/docker.sock
+    user: root
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - KIBANA_HOST=http://kibana:5601
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:rw
+      # Allows us to report on docker from the hosts information.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Allows us to load container log path as specified in filebeat.yml
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+    command: filebeat -e -strict.perms=false
+    depends_on:
+      - elasticsearch
 
   # Micro Services
   image-service:
@@ -72,10 +100,18 @@ services:
     build:
       context: ./image
       dockerfile: Dockerfile
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
     ports:
-      - '${IMAGE_PORT}'
+      - '4444'
     labels:
       - 'traefik.http.routers.image.rule=Host(`image.docker.localhost`)'
+      - 'co.elastic.logs/json.keys_under_root: true'
+      - 'co.elastic.logs/json.overwrite_keys: true'
+      - 'co.elastic.logs/json.add_error_key: true'
+      - 'co.elastic.logs/json.expand_keys: true'
 
 volumes:
   elasticsearch:
