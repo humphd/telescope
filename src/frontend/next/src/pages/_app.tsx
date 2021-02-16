@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 import { AppProps } from 'next/app';
 import { ThemeProvider } from '@material-ui/core/styles';
+
 import Header from '../components/Header';
 import UserProvider from '../components/UserProvider';
+import { darkTheme, lightTheme } from '../theme';
+import usePreferredTheme from '../hooks/use-preferred-theme';
+import { ThemeContext } from '../components/ThemeProvider';
 
 import '../styles/globals.css';
-import usePreferredThemeColors from '../hooks/use-prefer-theme-colors';
-import { darkTheme, lightTheme } from '../theme';
-import ThemeContext from '../contexts/themeContext';
 
 // Reference: https://github.com/mui-org/material-ui/blob/master/examples/nextjs/pages/_app.js
 const App = ({ Component, pageProps }: AppProps) => {
-  // This hook is for ensuring the styling is sync between client and server
+  // Use the preferred theme for this user and the browser (one of 'dark' or 'light').
+  const [preferredTheme, setPreferredTheme] = usePreferredTheme();
+  // Set our initial theme to be whatever the preferred theme is, or the light theme if no preference,
+  const [theme, setTheme] = useState(preferredTheme === 'dark' ? darkTheme : lightTheme);
+
+  // This hook is for ensuring the styling is in sync between client and server
   useEffect(() => {
     // Remove the server-side injected CSS.
     const jssStyles = document.querySelector('#jss-server-side');
@@ -20,44 +26,27 @@ const App = ({ Component, pageProps }: AppProps) => {
     }
   }, []);
 
-  const preferredTheme = usePreferredThemeColors();
-
-  const [theme, setTheme] = useState(preferredTheme);
-  const [mounted, setMounted] = useState(false);
-
-  // This hook is to ensure that right after the component mounted aka on client, display the client version of the app
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  // Switch the active theme, and also store it for next load
   const toggleTheme = () => {
-    if (theme.palette.type === 'light') {
-      localStorage.setItem('theme', 'dark');
+    if (theme === lightTheme) {
       setTheme(darkTheme);
+      setPreferredTheme('dark');
     } else {
-      localStorage.setItem('theme', 'light');
       setTheme(lightTheme);
+      setPreferredTheme('light');
     }
   };
 
-  const app = (
-    <ThemeProvider theme={theme}>
-      <UserProvider>
-        <ThemeContext.Provider value={{ themeType: theme.palette.type, toggleTheme }}>
+  return (
+    <ThemeContext.Provider value={{ theme, themeName: theme.palette.type, toggleTheme }}>
+      <ThemeProvider theme={theme}>
+        <UserProvider>
           <Header />
-        </ThemeContext.Provider>
-        <Component {...pageProps} />
-      </UserProvider>
-    </ThemeProvider>
+          <Component {...pageProps} />
+        </UserProvider>
+      </ThemeProvider>
+    </ThemeContext.Provider>
   );
-
-  // This is to ensure that the client see the right view that matched expectation of their preference
-  // On server it should show nothing, this is kinda a hack
-  if (!mounted) {
-    return <div style={{ visibility: 'hidden' }}>{app}</div>;
-  }
-
-  return app;
 };
 
 export default App;
